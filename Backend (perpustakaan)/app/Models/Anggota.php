@@ -15,5 +15,6 @@ class Anggota extends Model
         'alamat',
         'telepon',
         'email',
+        'tanggal daftar'
     ];
 }

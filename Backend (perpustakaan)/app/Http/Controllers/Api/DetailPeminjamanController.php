@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\DetailPeminjaman;
 use App\Models\Peminjaman;
@@ -9,22 +10,25 @@ use App\Models\Buku;
 
 class DetailPeminjamanController extends Controller
 {
-    // Tampilkan semua detail peminjaman
+    // Tampilkan semua detail peminjaman (API JSON)
     public function index()
     {
         $details = DetailPeminjaman::with(['peminjaman', 'buku'])->get();
-        return view('detailpeminjaman.index', compact('details'));
+        return response()->json($details);
     }
 
-    // Tampilkan form tambah detail peminjaman
+    // Endpoint untuk kebutuhan data referensi create (API JSON)
     public function create()
     {
         $peminjamans = Peminjaman::all();
-        $bukus = Buku::where('stok', '>', 0)->get(); // hanya buku yang tersedia
-        return view('detailpeminjaman.create', compact('peminjamans', 'bukus'));
+        $bukus = Buku::where('stok', '>', 0)->get();
+        return response()->json([
+            'peminjamans' => $peminjamans,
+            'bukus' => $bukus
+        ]);
     }
 
-    // Simpan detail peminjaman
+    // Simpan detail peminjaman (API JSON)
     public function store(Request $request)
     {
         $request->validate([
@@ -34,47 +38,42 @@ class DetailPeminjamanController extends Controller
         ]);
 
         $buku = Buku::findOrFail($request->buku_id);
-
         if ($buku->stok < $request->jumlah) {
-            return back()->with('error', 'Stok buku tidak mencukupi!');
+            return response()->json(['error' => 'Stok buku tidak mencukupi!'], 422);
         }
 
-        // Simpan peminjaman detail
-        DetailPeminjaman::create([
+        $detail = DetailPeminjaman::create([
             'peminjaman_id' => $request->peminjaman_id,
             'buku_id' => $request->buku_id,
             'jumlah' => $request->jumlah,
             'status' => 'Belum Kembali',
         ]);
 
-        // Kurangi stok buku
         $buku->stok -= $request->jumlah;
         $buku->save();
 
-        return redirect()->route('detailpeminjaman.index')->with('success', 'Detail peminjaman ditambahkan.');
+        return response()->json([
+            'message' => 'Detail peminjaman ditambahkan.',
+            'data' => $detail
+        ], 201);
     }
 
-    // Logika pengembalian buku
+    // Logika pengembalian buku (API JSON)
     public function kembalikan($id)
     {
         $detail = DetailPeminjaman::findOrFail($id);
-
         if ($detail->status === 'Sudah Dikembalikan') {
-            return back()->with('info', 'Buku sudah dikembalikan sebelumnya.');
+            return response()->json(['info' => 'Buku sudah dikembalikan sebelumnya.']);
         }
-
         $detail->status = 'Sudah Dikembalikan';
         $detail->save();
-
-        // Tambahkan kembali stok
         $buku = Buku::find($detail->buku_id);
         $buku->stok += $detail->jumlah;
         $buku->save();
-
-        return redirect()->back()->with('success', 'Buku berhasil dikembalikan dan stok diperbarui.');
+        return response()->json(['message' => 'Buku berhasil dikembalikan dan stok diperbarui.']);
     }
 
-    // Update detail peminjaman
+    // Update detail peminjaman (API JSON)
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -85,19 +84,15 @@ class DetailPeminjamanController extends Controller
         ]);
         $detail = DetailPeminjaman::findOrFail($id);
         $statusLama = $detail->status;
-
-        // Jika status berubah ke 'Sudah Dikembalikan' dan sebelumnya belum
-        if ($request->status === 'Sudah Dikembalikan' && $statusLama !== 'Sudah Dikembalikan') {
-            $buku = Buku::find($request->buku_id);
+        $validated = $request->all();
+        if ($validated['status'] === 'Sudah Dikembalikan' && $statusLama !== 'Sudah Dikembalikan') {
+            $buku = Buku::find($validated['buku_id']);
             if ($buku) {
-                $buku->stok += $request->jumlah;
+                $buku->stok += $validated['jumlah'];
                 $buku->save();
             }
         }
-
-        $detail->update($request->all());
-
-        // Cek jika semua detail pada peminjaman ini sudah dikembalikan, update status peminjaman
+        $detail->update($validated);
         $peminjaman = Peminjaman::find($request->peminjaman_id);
         if ($peminjaman) {
             $semuaKembali = $peminjaman->detail()->where('status', 'Belum Kembali')->count() === 0;
@@ -109,7 +104,9 @@ class DetailPeminjamanController extends Controller
                 $peminjaman->save();
             }
         }
-
-        return redirect()->route('detailpeminjaman.index')->with('success', 'Detail peminjaman berhasil diupdate');
+        return response()->json([
+            'message' => 'Detail peminjaman berhasil diupdate',
+            'data' => $detail
+        ]);
     }
 }

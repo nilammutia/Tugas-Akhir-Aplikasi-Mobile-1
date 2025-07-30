@@ -18,7 +18,6 @@
             <td>{{ $u->name }}</td>
             <td>{{ $u->email }}</td>
             <td>
-                <a class="btn btn-warning btn-sm" href="{{ route('user.edit', $u->id) }}">Edit</a>
                 <form action="{{ route('user.destroy', $u->id) }}" method="POST" style="display:inline;">
                     @csrf
                     @method('DELETE')

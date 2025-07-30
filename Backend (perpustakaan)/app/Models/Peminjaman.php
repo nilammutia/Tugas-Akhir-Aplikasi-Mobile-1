@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Peminjaman extends Model
 {
-    protected $table = 'peminjamen';
+    protected $table = 'peminjaman';
     protected $primaryKey = 'id';
     public $timestamps = true;
 
@@ -15,16 +15,21 @@ class Peminjaman extends Model
         'buku_id',
         'tanggal_pinjam',
         'tanggal_kembali',
-        'status',
+        'status'
     ];
 
     public function anggota()
     {
-        return $this->belongsTo(Anggota::class);
+        return $this->belongsTo(Anggota::class, 'anggota_id');
     }
 
     public function buku()
     {
-        return $this->belongsTo(Buku::class);
+        return $this->belongsTo(Buku::class, 'buku_id');
+    }
+
+    public function detail()
+    {
+        return $this->hasMany(DetailPeminjaman::class, 'peminjaman_id');
     }
 }

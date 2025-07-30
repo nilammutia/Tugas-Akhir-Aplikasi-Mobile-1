@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
+
 use Illuminate\Http\Request;
 
 use App\Models\Anggota;
@@ -24,12 +26,14 @@ class AnggotaController extends Controller
     // Simpan data anggota baru
     public function store(Request $request)
     {
-        Anggota::create($request->validate([
+        $data = $request->validate([
             'nama' => 'required',
             'alamat' => 'required',
             'telepon' => 'required',
             'email' => 'required|email|unique:anggotas,email',
-        ]));
+        ]);
+        $data['tanggal daftar'] = now()->format('Y-m-d');
+        Anggota::create($data);
         return redirect()->route('anggota.index')->with('success', 'Anggota berhasil ditambahkan');
     }
 

@@ -4,22 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Detail_Peminjaman extends Model
+class DetailPeminjaman extends Model
 {
-    protected $table = 'detail__peminjamen';
+    protected $table = 'detail_peminjaman';
+
     protected $fillable = [
         'peminjaman_id',
         'buku_id',
         'jumlah',
+        'status'
     ];
 
     public function peminjaman()
     {
-        return $this->belongsTo(Peminjaman::class, 'peminjaman_id');
+        return $this->belongsTo(Peminjaman::class);
     }
 
     public function buku()
     {
-        return $this->belongsTo(Buku::class, 'buku_id');
+        return $this->belongsTo(Buku::class);
     }
 }

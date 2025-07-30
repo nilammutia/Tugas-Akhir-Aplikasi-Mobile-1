@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Buku;
+use Illuminate\Http\Request;
 
 class BukuController extends Controller
 {
-    // Tampilkan daftar buku
+    // Tampilkan semua buku
     public function index()
     {
         $bukus = Buku::all();
@@ -21,15 +20,18 @@ class BukuController extends Controller
         return view('buku.create');
     }
 
-    // Simpan data buku baru
+    // Simpan buku baru
     public function store(Request $request)
     {
-        Buku::create($request->validate([
-            'judul' => 'required',
-            'penulis' => 'required',
-            'penerbit' => 'required',
-            'tahun_terbit' => 'required|integer',
-        ]));
+        $validated = $request->validate([
+            'judul' => 'required|string|max:255',
+            'penulis' => 'nullable|string|max:255',
+            'penerbit' => 'nullable|string|max:255',
+            'tahun_terbit' => 'nullable|integer',
+            'stok' => 'required|integer|min:0',
+        ]);
+
+        Buku::create($validated);
         return redirect()->route('buku.index')->with('success', 'Buku berhasil ditambahkan');
     }
 
@@ -43,13 +45,26 @@ class BukuController extends Controller
     // Update data buku
     public function update(Request $request, $id)
     {
+        $validated = $request->validate([
+            'judul' => 'required|string|max:255',
+            'penulis' => 'nullable|string|max:255',
+            'penerbit' => 'nullable|string|max:255',
+            'tahun_terbit' => 'nullable|integer',
+            'stok' => 'required|integer|min:0',
+        ]);
+
         $buku = Buku::findOrFail($id);
-        $buku->update($request->validate([
-            'judul' => 'required',
-            'penulis' => 'required',
-            'penerbit' => 'required',
-            'tahun_terbit' => 'required|integer',
-        ]));
+        $buku->update($validated);
+
         return redirect()->route('buku.index')->with('success', 'Buku berhasil diupdate');
+    }
+
+    // Hapus buku
+    public function destroy($id)
+    {
+        $buku = Buku::findOrFail($id);
+        $buku->delete();
+
+        return redirect()->route('buku.index')->with('success', 'Buku berhasil dihapus');
     }
 }

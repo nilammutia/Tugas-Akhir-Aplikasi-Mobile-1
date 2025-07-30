@@ -2,28 +2,64 @@
 
 @section('content')
 <div class="container">
-    <h1>Edit Buku</h1>
-    <form action="{{ route('buku.update', $buku->id) }}" method="POST">
+    <h2>Edit Peminjaman</h2>
+
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form action="{{ route('peminjaman.update', $peminjaman->id) }}" method="POST">
         @csrf
         @method('PUT')
-        <div class="mb-3">
-            <label for="judul" class="form-label">Judul</label>
-            <input type="text" class="form-control" id="judul" name="judul" value="{{ $buku->judul }}" required>
+
+        <div class="form-group mb-3">
+            <label for="anggota_id">Anggota</label>
+            <select name="anggota_id" class="form-control">
+                @foreach($anggotas as $anggota)
+                    <option value="{{ $anggota->id }}" {{ $peminjaman->anggota_id == $anggota->id ? 'selected' : '' }}>
+                        {{ $anggota->nama }}
+                    </option>
+                @endforeach
+            </select>
         </div>
-        <div class="mb-3">
-            <label for="penulis" class="form-label">Penulis</label>
-            <input type="text" class="form-control" id="penulis" name="penulis" value="{{ $buku->penulis }}" required>
+
+        <div class="form-group mb-3">
+            <label for="buku_id">Buku</label>
+            <select name="buku_id" class="form-control">
+                @foreach($bukus as $buku)
+                    <option value="{{ $buku->id }}" {{ $peminjaman->buku_id == $buku->id ? 'selected' : '' }}>
+                        {{ $buku->judul }} (Stok: {{ $buku->stok }})
+                    </option>
+                @endforeach
+            </select>
         </div>
-        <div class="mb-3">
-            <label for="penerbit" class="form-label">Penerbit</label>
-            <input type="text" class="form-control" id="penerbit" name="penerbit" value="{{ $buku->penerbit }}" required>
+
+        <div class="form-group mb-3">
+            <label for="tanggal_pinjam">Tanggal Pinjam</label>
+            <input type="date" name="tanggal_pinjam" class="form-control" value="{{ $peminjaman->tanggal_pinjam }}">
         </div>
-        <div class="mb-3">
-            <label for="tahun_terbit" class="form-label">Tahun Terbit</label>
-            <input type="number" class="form-control" id="tahun_terbit" name="tahun_terbit" value="{{ $buku->tahun_terbit }}" required>
+
+        <div class="form-group mb-3">
+            <label for="tanggal_kembali">Tanggal Kembali</label>
+            <input type="date" name="tanggal_kembali" class="form-control" value="{{ $peminjaman->tanggal_kembali }}">
         </div>
-        <button type="submit" class="btn btn-success">Update</button>
-        <a href="{{ route('buku.index') }}" class="btn btn-secondary">Kembali</a>
+
+        <div class="form-group mb-3">
+            <label for="status">Status</label>
+            <select name="status" class="form-control">
+                <option value="dipinjam" {{ $peminjaman->status == 'dipinjam' ? 'selected' : '' }}>Dipinjam</option>
+                <option value="dikembalikan" {{ $peminjaman->status == 'dikembalikan' ? 'selected' : '' }}>Dikembalikan</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+        <a href="{{ route('peminjaman.index') }}" class="btn btn-secondary">Batal</a>
     </form>
 </div>
 @endsection
